@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <logger>
+        <level>warning</level>
+        <console>true</console>
+    </logger>
+    <kafka>
+        <!-- A new consumer group must include already published transactions. -->
+        <auto_offset_reset>earliest</auto_offset_reset>
+    </kafka>
+</clickhouse>
