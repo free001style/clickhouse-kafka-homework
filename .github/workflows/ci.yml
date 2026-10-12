@@ -1,0 +1,62 @@
+name: Tests and Kafka-to-ClickHouse smoke test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Start Kafka and ClickHouse
+        run: docker compose up -d --wait kafka clickhouse
+      - name: Run the demo through Kafka and ClickHouse
+        run: docker compose run --build --rm pipeline --csv /data/demo.csv --output-dir /results/ci
+      - name: Compare the ClickHouse result with the reference
+        run: |
+          python - <<'PY'
+          import csv
+          from decimal import Decimal
+          from pathlib import Path
+
+          def read_result(path):
+              with Path(path).open(newline="", encoding="utf-8") as source:
+                  reader = csv.DictReader(source)
+                  assert reader.fieldnames, f"Missing CSV header: {path}"
+                  rows = []
+                  for row in reader:
+                      rows.append(tuple(
+                          (key, Decimal(value) if key == "max_amount" else value)
+                          for key, value in sorted(row.items())
+                      ))
+                  return tuple(sorted(reader.fieldnames)), sorted(rows)
+
+          expected = read_result("results/demo_expected.csv")
+          actual = read_result("results/ci/largest_transaction_by_state.csv")
+          assert actual == expected, f"Result mismatch\nexpected={expected}\nactual={actual}"
+          print("Kafka → ClickHouse → aggregate result matches the reference.")
+          PY
+      - name: Verify the benchmark command on the demo
+        run: docker compose run --rm --entrypoint python pipeline -m app.benchmark --runs 2 --output /results/ci/benchmark.json
+      - name: Retain integration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kafka-clickhouse-demo-results
+          path: results/ci/
+      - name: Container logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Remove test containers and volumes
+        if: always()
+        run: docker compose down --volumes --remove-orphans

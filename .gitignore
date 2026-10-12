@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.DS_Store
+
+# Keep the supplied large data archive and extracted source out of Git.
+/data/*
+!/data/demo.csv
+!/data/README.md
+*.zip
+
+# Keep reference results, but not local smoke-test output or partial exports.
+/results/ci/
+/results/demo/
+/results/train_run/
+/results/all_run/
+/results/reference_train.csv
+/results/producer_manifest.json
+/results/benchmark.json
+/results/*.tmp

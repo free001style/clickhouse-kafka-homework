@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "file": "train.csv",
+      "rows": 786431,
+      "sha256": "2fd291f0d66cbb1f3c3e442396f3725d4cbde650d5dd0c16322c5230d3776b99"
+    },
+    {
+      "file": "test.csv",
+      "rows": 262144,
+      "sha256": "4129db5d9079f907d9a38aefc170f5e105a650a8273457aaae02a1f735516eac"
+    }
+  ],
+  "expected_rows": 1048575
+}
