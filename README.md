@@ -17,6 +17,8 @@ dependencies run in Docker; installing Python on the host is optional.
 Start with the included synthetic data; no Kaggle account is needed:
 
 ```bash
+git clone https://github.com/free001style/clickhouse-kafka-homework.git
+cd clickhouse-kafka-homework
 docker compose up -d --wait kafka clickhouse
 docker compose run --build --rm pipeline --csv /data/demo.csv --output-dir /results/demo
 ```
@@ -71,8 +73,10 @@ The committed result CSVs were calculated from the entire supplied datasets with
 exact decimal arithmetic and independently checked using pandas integer cents.
 They are **reference results, not a claim of an executed Kafka/ClickHouse run**.
 Running the commands above creates actual ClickHouse exports and a run manifest.
-See [validation status](docs/validation.md) for the checks performed in the
-development environment and the remaining integration check.
+The [GitHub Actions integration run](https://github.com/free001style/clickhouse-kafka-homework/actions/runs/38281744250)
+passed the real Docker/Kafka/ClickHouse demo, both SQL queries, and the benchmark
+command. See [validation status](docs/validation.md) for the exact scope; full-data
+reference validation and the 20-row container demo are separate checks.
 
 Output columns: `us_state,cat_id,max_amount,transaction_id`. Amount means the
 largest single transaction, not the category with the greatest total spending.
@@ -194,9 +198,9 @@ docker compose logs --tail=100 kafka clickhouse
 docker compose exec -T clickhouse clickhouse-client --user homework --password homework_local_only --multiquery < sql/05_diagnostics.sql
 ```
 
-The unit tests run using the standard library. GitHub Actions also launches the
-real containers and verifies the synthetic demo through Kafka and both SQL
-queries. Until that job runs successfully, its integration status is unverified.
+The 46 unit tests and the real Kafka/ClickHouse demo passed in GitHub Actions.
+The workflow also verifies the benchmark command and retains the generated CSV,
+manifests and demo benchmark as the `kafka-clickhouse-demo-results` artifact.
 
 If port 8123 is occupied, change only the host side of its Compose mapping.
 If a file is missing, verify `data/train.csv` exists before launching the pipeline.
@@ -205,18 +209,13 @@ ingestion stalls, inspect `system.kafka_consumers` via the diagnostics SQL; inva
 messages fail visibly instead of being silently skipped. A failed partial import
 should be reset with `docker compose down -v` before retrying.
 
-## Publish to GitHub
+## Repository and submission
 
-The local Git history uses Ilya Drobyshevskiy's name and the GitHub noreply address
-associated with `free001style`. Create an empty **public** repository named
-`clickhouse-kafka-homework`, then push:
+Submit this public repository:
+<https://github.com/free001style/clickhouse-kafka-homework>.
+Commits use **Ilya Drobyshevskiy** (`free001style`).
 
-```bash
-git remote add origin https://github.com/free001style/clickhouse-kafka-homework.git
-git push -u origin main
-```
-
-Submit that public repository URL. The raw dataset is not required for the
+The raw dataset is not required for the
 included demo or CI; reviewers can place the supplied archive's train.csv in
 `data/` to reproduce the full result.
 
