@@ -1,0 +1,11 @@
+# Only executable source enters the application image.
+*
+!requirements.txt
+!app/
+!app/**
+!sql/
+!sql/**
+!tests/
+!tests/**
+**/__pycache__/
+**/*.py[cod]
